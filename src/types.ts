@@ -18,6 +18,7 @@ export interface TweetMediaResult {
   duration: number;
   durationFormatted: string;
   cover: string;
+  videoStreamUrl?: string;
   author: {
     name: string;
     username: string;

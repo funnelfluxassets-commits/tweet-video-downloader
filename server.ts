@@ -275,6 +275,16 @@ async function extractTweetMedia(targetUrl: string) {
     }
   );
 
+  // Direct video stream for HTML5 preview playback
+  let videoStreamUrl = mediaInfo.url || '';
+  if (!videoStreamUrl && Array.isArray(mediaInfo.formats)) {
+    const mp4Formats = mediaInfo.formats.filter((f: any) => f.url && (f.ext === 'mp4' || f.vcodec !== 'none'));
+    if (mp4Formats.length > 0) {
+      const bestPreview = mp4Formats.find((f: any) => f.height && f.height <= 720) || mp4Formats[mp4Formats.length - 1];
+      videoStreamUrl = bestPreview.url;
+    }
+  }
+
   return {
     id: tweetId,
     tweetId,
@@ -282,6 +292,7 @@ async function extractTweetMedia(targetUrl: string) {
     duration: mediaInfo.duration || 0,
     durationFormatted: isGif ? 'GIF' : 'Video',
     cover: coverUrl,
+    videoStreamUrl,
     author: {
       name: authorName,
       username: authorUsername,
