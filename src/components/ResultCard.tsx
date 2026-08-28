@@ -185,7 +185,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onDownloadSucces
         <div className="md:col-span-5 relative rounded-2xl overflow-hidden bg-black shadow-lg border border-zinc-200 dark:border-zinc-800 aspect-[9/16] max-h-[460px] mx-auto w-full max-w-[280px]">
           {isPlayingVideo ? (
             <video
-              src={result.videoStreamUrl || result.downloads[0]?.url || result.originalUrl}
+              src={result.videoStreamUrl ? `/api/stream-preview?url=${encodeURIComponent(result.videoStreamUrl)}` : result.downloads[0]?.url || result.originalUrl}
               controls
               autoPlay
               playsInline
@@ -294,13 +294,14 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onDownloadSucces
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      setSelectedDownloadId(option.id);
                       handleTriggerDownload(option);
                     }}
                     disabled={isDownloading}
                     className={`min-w-[84px] sm:min-w-[92px] h-9 sm:h-10 px-3.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-wait ${
                       isSuccess
                         ? 'bg-emerald-500 text-white'
-                        : option.recommend
+                        : isSelected
                         ? 'bg-gradient-to-r from-sky-500 via-emerald-500 to-indigo-600 hover:opacity-90 text-white shadow-md shadow-sky-500/25'
                         : 'bg-white dark:bg-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-600 text-zinc-800 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-600'
                     }`}

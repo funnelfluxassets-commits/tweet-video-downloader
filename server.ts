@@ -439,6 +439,42 @@ app.get('/api/proxy-download', async (req, res) => {
   }
 });
 
+// ─── Direct In-App Video Preview Streamer ──────────────────────────────────────
+
+app.get('/api/stream-preview', (req, res) => {
+  const videoUrl = req.query.url as string;
+  if (!videoUrl) {
+    return res.status(400).send('Video URL parameter is required.');
+  }
+
+  try {
+    const protocol = videoUrl.startsWith('https') ? https : http;
+    const clientReq = protocol.get(videoUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Referer': 'https://x.com/',
+      },
+    }, (proxyRes) => {
+      res.writeHead(proxyRes.statusCode || 200, {
+        'Content-Type': 'video/mp4',
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'public, max-age=3600',
+        'Access-Control-Allow-Origin': '*',
+        ...(proxyRes.headers['content-length'] ? { 'Content-Length': proxyRes.headers['content-length'] } : {}),
+      });
+      proxyRes.pipe(res);
+    });
+
+    clientReq.on('error', (err) => {
+      console.warn('[stream-preview error]:', err?.message);
+      if (!res.headersSent) res.status(500).end();
+    });
+  } catch (err: any) {
+    console.warn('[stream-preview catch]:', err?.message);
+    if (!res.headersSent) res.status(500).end();
+  }
+});
+
 // ─── Resend Admin Notification for Signups ────────────────────────────────────
 
 app.post('/api/auth/register', async (req, res) => {
