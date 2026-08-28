@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Modern Cyber Blue / Royal Cyan Gradient -->
+    <linearGradient id="tweetBrandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1D9BF0"/>
+      <stop offset="50%" stop-color="#00BA7C"/>
+      <stop offset="100%" stop-color="#7856FF"/>
+    </linearGradient>
+    <linearGradient id="sparkleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F2FE"/>
+      <stop offset="100%" stop-color="#4FACFE"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Rounded Shield / Squircle -->
+  <rect x="32" y="32" width="448" height="448" rx="128" fill="url(#tweetBrandGrad)"/>
+
+  <!-- Stylized Geometric Downloader Core -->
+  <!-- Upper Dynamic Wing Arcs -->
+  <path d="M148 168 C200 128 312 128 364 168" fill="none" stroke="#ffffff" stroke-width="32" stroke-linecap="round"/>
+
+  <!-- Center Download Arrow & Fast Velocity Lines -->
+  <path d="M256 150 V340 M184 268 L256 340 L328 268" fill="none" stroke="#ffffff" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Bottom Catch Tray Arc -->
+  <path d="M140 348 C140 404 372 404 372 348" fill="none" stroke="#ffffff" stroke-width="32" stroke-linecap="round"/>
+
+  <!-- Top-Right 4-Point Diamond Sparkle Star -->
+  <path d="M388 96 Q388 126 418 126 Q388 126 388 156 Q388 126 358 126 Q388 126 388 96 Z" fill="url(#sparkleGrad)"/>
+</svg>
