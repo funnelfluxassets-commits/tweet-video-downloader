@@ -63,6 +63,10 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onDownloadSucces
 
   const [customFilename, setCustomFilename] = useState<string>(presetCreatorCaption);
 
+  useEffect(() => {
+    setCustomFilename(presetCreatorCaption);
+  }, [presetCreatorCaption]);
+
   const handleCopyCaption = () => {
     if (result.title) {
       navigator.clipboard.writeText(result.title);

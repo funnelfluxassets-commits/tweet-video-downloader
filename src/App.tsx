@@ -52,7 +52,6 @@ export const App: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
-      setResult(null);
 
       const res = await fetch('/api/extract', {
         method: 'POST',
