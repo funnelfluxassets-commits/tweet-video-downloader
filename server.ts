@@ -365,14 +365,16 @@ app.get('/api/proxy-download', async (req, res) => {
     let ytdlpArgs: string[];
     if (isAudio) {
       ytdlpArgs = [
+        '-f', 'ba[ext=m4a]/ba/bestaudio',
         '-x',
         '--audio-format', 'mp3',
-        '--audio-quality', '0',
+        '--audio-quality', '192K',
         '--ffmpeg-location', ffmpegBin,
         '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         '--add-header', 'Referer:https://x.com/',
         '--add-header', 'Accept-Language:en-US,en;q=0.9',
         '-o', tmpFile,
+        '--no-cache-dir',
         '--no-playlist',
         '--js-runtimes', 'node',
         targetUrl,
@@ -390,6 +392,7 @@ app.get('/api/proxy-download', async (req, res) => {
         '--add-header', 'Referer:https://x.com/',
         '--add-header', 'Accept-Language:en-US,en;q=0.9',
         '-o', tmpFile,
+        '--no-cache-dir',
         '--no-playlist',
         '--js-runtimes', 'node',
         targetUrl,
