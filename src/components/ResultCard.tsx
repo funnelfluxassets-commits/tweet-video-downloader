@@ -98,7 +98,28 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onDownloadSucces
         endpoint = `/api/proxy-download?url=${encodeURIComponent(result.originalUrl)}&quality=${encodeURIComponent(option.quality)}&filename=${encodeURIComponent(safeTitle)}&ext=${ext}&isAudio=${option.type === 'audio' ? '1' : '0'}&isGif=${option.type === 'gif' ? '1' : '0'}`;
       }
 
-      const response = await fetch(endpoint);
+      let response: Response | null = null;
+
+      // 1. Try direct in-browser download if direct media URL exists (0 MB server bandwidth)
+      if (option.url && option.type !== 'audio' && option.type !== 'gif') {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 3500);
+          const directRes = await fetch(option.url, { signal: controller.signal });
+          clearTimeout(timer);
+          if (directRes.ok) {
+            response = directRes;
+          }
+        } catch {
+          // Fall back below to server
+        }
+      }
+
+      // 2. If direct fetch not available or failed, use Vercel proxy
+      if (!response) {
+        response = await fetch(endpoint);
+      }
+
       if (!response.ok) {
         const errorJson = await response.json().catch(() => null);
         const msg = errorJson?.detail
@@ -185,11 +206,18 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onDownloadSucces
         <div className="md:col-span-5 relative rounded-2xl overflow-hidden bg-black shadow-lg border border-zinc-200 dark:border-zinc-800 aspect-[9/16] max-h-[460px] mx-auto w-full max-w-[280px]">
           {isPlayingVideo ? (
             <video
-              src={result.videoStreamUrl ? `/api/stream-preview?url=${encodeURIComponent(result.videoStreamUrl)}` : result.downloads[0]?.url || result.originalUrl}
+              src={result.videoStreamUrl || result.downloads[0]?.url || result.originalUrl}
               controls
               autoPlay
               playsInline
               className="w-full h-full object-contain"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.dataset.fallback && result.videoStreamUrl) {
+                  target.dataset.fallback = '1';
+                  target.src = `/api/stream-preview?url=${encodeURIComponent(result.videoStreamUrl)}`;
+                }
+              }}
             />
           ) : (
             <div className="relative w-full h-full group cursor-pointer" onClick={() => setIsPlayingVideo(true)}>
