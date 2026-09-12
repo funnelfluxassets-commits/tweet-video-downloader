@@ -104,18 +104,35 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, onDownloadSucces
 
       let response: Response | null = null;
 
-      // 1. Try direct in-browser download if direct media URL exists (0 MB server bandwidth)
-      if (option.url && option.type !== 'audio' && option.type !== 'gif') {
+      // 1. Try direct in-browser download ONLY if direct media CDN URL exists (not Twitter/X web page URL)
+      const directMediaUrl = (option as any).directUrl || (option.url && (option.url.includes('twimg.com') || option.url.includes('.mp4')) ? option.url : null);
+      if (directMediaUrl && option.type !== 'audio' && option.type !== 'gif') {
         try {
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 3500);
-          const directRes = await fetch(option.url, { signal: controller.signal });
+          const timer = setTimeout(() => controller.abort(), 4000);
+          const directRes = await fetch(directMediaUrl, { signal: controller.signal });
           clearTimeout(timer);
           if (directRes.ok) {
-            response = directRes;
+            const blob = await directRes.blob();
+            // Verify it is an actual binary media file (>200KB or video mime-type) and not an HTML error
+            if (blob.type.includes('video') || blob.type.includes('octet-stream') || blob.size > 200000) {
+              const blobUrl = window.URL.createObjectURL(blob);
+              const tempLink = document.createElement('a');
+              tempLink.href = blobUrl;
+              tempLink.download = `${safeTitle}.${ext}`;
+              document.body.appendChild(tempLink);
+              tempLink.click();
+              document.body.removeChild(tempLink);
+              setTimeout(() => window.URL.revokeObjectURL(blobUrl), 3000);
+
+              onDownloadSuccess();
+              setDownloadSuccessId(option.id);
+              setTimeout(() => setDownloadSuccessId(null), 3000);
+              return;
+            }
           }
         } catch {
-          // Fall back below to server
+          // Direct fetch blocked or failed, fall back below to server proxy
         }
       }
 

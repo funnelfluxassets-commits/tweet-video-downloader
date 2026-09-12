@@ -211,6 +211,32 @@ async function extractTweetMedia(targetUrl: string) {
   const coverUrl = mediaInfo.thumbnail || '';
   const isGif = mediaInfo.duration ? mediaInfo.duration <= 4 : false;
 
+  // Extract direct media URLs from mediaInfo formats for direct in-browser download
+  let f1080Url = '';
+  let f720Url = '';
+  if (Array.isArray(mediaInfo.formats)) {
+    const mp4Formats = mediaInfo.formats.filter((f: any) => f.url && (f.ext === 'mp4' || f.vcodec !== 'none'));
+    // Sort descending by highest dimension (handles both 16:9 landscape and 9:16 vertical)
+    mp4Formats.sort((a: any, b: any) => {
+      const dimA = Math.max(a.height || 0, a.width || 0);
+      const dimB = Math.max(b.height || 0, b.width || 0);
+      return dimB - dimA;
+    });
+
+    if (mp4Formats.length > 0) {
+      f1080Url = mp4Formats[0].url;
+      const f720 =
+        mp4Formats.find((f: any) => {
+          const minDim = Math.min(f.height || 0, f.width || 0);
+          return minDim <= 720;
+        }) || mp4Formats[mp4Formats.length - 1];
+      f720Url = f720.url;
+    }
+  } else if (mediaInfo.url) {
+    f1080Url = mediaInfo.url;
+    f720Url = mediaInfo.url;
+  }
+
   const downloads: any[] = [
     {
       id: 'tw_1080p_fhd',
@@ -219,7 +245,8 @@ async function extractTweetMedia(targetUrl: string) {
       description: 'Original high-definition MP4 video with crisp audio',
       badge: '1080p FULL HD',
       type: 'video',
-      url: cleanUrl,
+      url: f1080Url || cleanUrl,
+      directUrl: f1080Url,
       extension: 'mp4',
       recommend: true,
     },
@@ -230,7 +257,8 @@ async function extractTweetMedia(targetUrl: string) {
       description: 'Standard HD MP4 — quick to save and share',
       badge: '720p HD',
       type: 'video',
-      url: cleanUrl,
+      url: f720Url || cleanUrl,
+      directUrl: f720Url,
       extension: 'mp4',
       recommend: false,
     },
@@ -381,12 +409,13 @@ app.get('/api/proxy-download', async (req, res) => {
       ];
     } else {
       const qNum = parseInt(qualityStr, 10) || 1080;
-      const format = `best[height<=${qNum}]/bestvideo[height<=${qNum}]+bestaudio/best`;
+      const ffmpegArgs = ffmpegBin === 'ffmpeg' ? [] : ['--ffmpeg-location', ffmpegBin];
 
       ytdlpArgs = [
-        '-f', format,
+        '-S', `res:${qNum},vcodec:h264,ext:mp4:m4a`,
+        '-f', 'bestvideo+bestaudio/best',
         '--merge-output-format', 'mp4',
-        '--ffmpeg-location', ffmpegBin,
+        ...ffmpegArgs,
         '--postprocessor-args', 'ffmpeg:-movflags +faststart',
         '--add-header', 'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         '--add-header', 'Referer:https://x.com/',
